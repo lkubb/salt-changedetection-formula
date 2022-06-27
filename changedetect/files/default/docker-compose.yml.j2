@@ -1,0 +1,47 @@
+version: '2'
+services:
+  changedetection:
+    image: {{ changedetect.lookup.pkg.container.changedetection }}
+    container_name: {{ changedetect.lookup.container.changedetection.container_name }}
+    hostname: {{ changedetect.lookup.container.changedetection.hostname }}
+    volumes:
+      - {{ changedetect.lookup.paths.data }}:/datastore
+    env_file:
+      - {{ changedetect.lookup.paths.config_changedetection }}
+      # Comment out ports: when using behind a reverse proxy , enable networks: etc.
+    ports:
+      - {{ changedetect.config.env.port }}:{{ changedetect.config.env.port }}
+    restart: unless-stopped
+
+{%- if changedetect.selenium.enable %}
+
+     # Used for fetching pages via WebDriver+Chrome where you need Javascript support.
+     # Now working on arm64 (needs testing on rPi - tested on Oracle ARM instance)
+     # replace image with seleniarm/standalone-chromium:4.0.0-20211213
+
+  browser-chrome:
+    hostname: {{ changedetect.lookup.container.selenium_chrome.hostname }}
+    container_name: {{ changedetect.lookup.container.selenium_chrome.container_name }}
+    image: {{ changedetect.lookup.pkg.container.selenium_chrome }}
+    env_file:
+      - {{ changedetect.lookup.paths.config_selenium_chrome }}
+    shm_size: 2g
+       # volumes:
+       #     # Workaround to avoid the browser crashing inside a docker container
+       #     # See https://github.com/SeleniumHQ/docker-selenium#quick-start
+       #     - /dev/shm:/dev/shm
+    restart: unless-stopped
+{%- endif %}
+
+{%- if changedetect.playwright.enable and "chromium" == changedetect.playwright.browser_type | lower %}
+
+     # Used for fetching pages via Playwright+Chrome where you need Javascript support.
+
+  playwright-chrome:
+    hostname: {{ changedetect.lookup.container.playwright_chrome.hostname }}
+    container_name: {{ changedetect.lookup.container.playwright_chrome.container_name }}
+    image: {{ changedetect.lookup.pkg.container.playwright_chrome }}
+    restart: unless-stopped
+    env_file:
+      - {{ changedetect.lookup.paths.config_playwright_chrome }}
+{%- endif %}
