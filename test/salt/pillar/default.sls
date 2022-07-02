@@ -7,33 +7,46 @@ changedetect:
     # Just for testing purposes
     winner: lookup
     added_in_lookup: lookup_value
-    config: 'y'
-    service:
+    compose:
+      create_pod: null
+      pod_args: null
+      project_name: changedetection
+      remove_orphans: true
+      service:
+        container_prefix: null
+        ephemeral: true
+        pod_prefix: null
+        restart_policy: on-failure
+        separator: null
+        stop_timeout: null
+    paths:
+      base: /opt/containers/changedetection
+      compose: docker-compose.yml
+      config_changedetection: changedetection.env
+      config_playwright_chrome: playwright_chrome.env
+      config_selenium_chrome: selenium_chrome.env
+      data: datastore
+    user:
+      groups: []
+      home: null
       name: changedetection
+      shell: /usr/sbin/nologin
+      uid: null
     container:
       changedetection:
         container_name: changedetection
         hostname: changedetection
+        image: ghcr.io/dgtlmoon/changedetection.io
         pgid: false
         puid: false
       playwright_chrome:
         container_name: playwright-chrome
         hostname: playwright-chrome
+        image: docker.io/browserless/chrome
       selenium_chrome:
         container_name: selenium-chrome
         hostname: browser-chrome
-    paths:
-      base: /opt/changedetection
-      compose: docker-compose.yml
-      config_changedetection: changedetection.env
-      config_playwright_chrome: playwright-chrome.env
-      config_selenium_chrome: selenium-chrome.env
-      data: datastore
-    pkg:
-      container:
-        changedetection: ghcr.io/dgtlmoon/changedetection.io
-        playwright_chrome: docker.io/browserless/chrome
-        selenium_chrome: docker.io/selenium/standalone-chrome-debug:3.141.59
+        image: docker.io/selenium/standalone-chrome-debug:3.141.59
     podman:
       compose_current_pip_default: 1.0.3
       compose_forced_pods:
@@ -45,12 +58,14 @@ changedetect:
       compose_nopods:
         - 1.0.2
         - 1.0.3
-    user:
-      groups: []
-      home: ''
-      name: changedetection
-      shell: /usr/sbin/nologin
-      uid: 4373
+  install:
+    rootless: true
+    remove_all_data_for_sure: false
+    method: docker-compose
+    podman:
+      compose_pods: true
+      compose_systemd: false
+      rootless: false
   config:
     app: {}
     env:
@@ -68,12 +83,6 @@ changedetect:
       use_x_settings: false
     headers: {}
     requests: {}
-  installation:
-    method: docker-compose
-    podman:
-      compose_pods: true
-      compose_systemd: false
-      rootless: false
   playwright:
     browser_type: chromium
     browserless_chrome:
@@ -144,8 +153,8 @@ changedetect:
 
     # For testing purposes
     source_files:
-      changedetect-config-file-file-managed:
-        - 'example.tmpl.jinja'
+      Changedetection environment file is managed:
+      - changedetect.env.j2
 
   # Just for testing purposes
   winner: pillar

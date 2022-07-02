@@ -1,121 +1,146 @@
-{#-
-    This part tries to autoconfigure pod usage with podman-compose.
-    Not all versions allow selection, so that has to be accounted for.
-    Pods require "localhost" as hostname instead of service hostname.
--#}
-
-{%- if "podman-compose" == mapdata.installation.method -%}
-  {%- set pc_version = salt["cmd.run_stdout"]("podman-compose --version | grep 'podman-composer version' | egrep -o '[0-9\.]+'", python_shell=true, ignore_retcode=true)
-                       or mapdata.lookup.podman.compose_current_pip_default -%}
-  {%- set pod_enabled = {
-      "is": mapdata.installation.podman.compose_pods,
-      "can": true,
-      "must": false
-    } -%}
-
-  {%- for v in mapdata.lookup.podman.compose_forced_pods -%}
-    {%- if pc_version.startswith(v) -%}
-      {%- do pod_enabled.update({"must": true}) -%}
-    {%- endif -%}
-  {%- endfor -%}
-
-  {%- for v in mapdata.lookup.podman.compose_nopods -%}
-    {%- if pc_version.startswith(v) -%}
-      {%- do pod_enabled.update({"can": false}) -%}
-    {%- endif -%}
-  {%- endfor -%}
-
-  {%- if pod_enabled.must and not pod_enabled.is -%}
-    {%- do salt.log.warning("Pod creation was disabled, but has to be enabled for current podman-compose version. Overriding.") -%}
-    {%- do mapdata.installation.podman.update({"compose_pods": true}) -%}
-  {%- elif not pod_enabled.can and pod_enabled.is -%}
-    {%- do salt.log.warning("Pod creation was enabled, but cannot be enabled for current podman-compose version. Overriding.") -%}
-    {%- do mapdata.installation.podman.update({"compose_pods": false}) -%}
-  {%- endif -%}
-  {#- This tells the formula whether it needs to include --no-pod for v >=1.0.4 -#}
-  {%- do mapdata.update({"_podman_nopod_switch": pod_enabled.can and not pod_enabled.is}) %}
-
-  {%- if mapdata.installation.podman.compose_systemd %}
-    {%- for v in mapdata.lookup.podman.compose_no_systemd -%}
-      {%- if pc_version.startswith(v) -%}
-        {%- do salt.log.warning("podman-compose systemd integration was selected, but cannot be enabled for current podman-compose version. Overriding.") -%}
-        {%- do mapdata.installation.podman.update({"compose_systemd": false}) -%}
-      {%- endif -%}
-    {%- endfor -%}
-  {%- endif %}
-{%- endif -%}
-
-{%- if "podman-compose" != mapdata.installation.method or
-         not mapdata.installation.podman.compose_pods -%}
-  {%- do mapdata.update({
-    "_playwright_chrome_host": mapdata.lookup.container.playwright_chrome.hostname,
-    "_selenium_chrome_host": mapdata.lookup.container.selenium_chrome.hostname,
-  }) -%}
-{%- else -%}
-  {%- do mapdata.update({
-    "_playwright_chrome_host": "localhost",
-    "_selenium_chrome_host": "localhost",
-  }) -%}
-{%- endif -%}
-
+{#- -*- coding: utf-8 -*- #}
+{#- vim: ft=jinja #}
 
 {#-
-    Convenience: Make paths relative to base if not absolute.
+    Convenience: Make relative paths absolute.
 -#}
-{%- for path in [
-                  "compose",
-                  "config_changedetection",
-                  "config_playwright_chrome",
-                  "config_selenium_chrome",
-                  "data"
-                ] -%}
-  {%- if not mapdata.lookup.paths[path].startswith("/") -%}
-    {%- do mapdata.lookup.paths.update({path: mapdata.lookup.paths.base | path_join(mapdata.lookup.paths[path])}) -%}
-  {%- endif -%}
-{%- endfor -%}
-{%- if not mapdata.lookup.user.home %}
-  {%- do mapdata.lookup.user.update({"home": mapdata.lookup.paths.base}) %}
-{%- elif not mapdata.lookup.user.home.startswith("/") %}
-  {%- do mapdata.lookup.user.update({"home": mapdata.lookup.paths.base | path_join(mapdata.lookup.user.home)}) %}
-{%- endif %}
 
-
-{#-
-    Convenience: Save compose vars. This avoids a lot of unreadable
-    Jinja in the service.running state file.
--#}
-{%- if mapdata.installation.method == "docker-compose" %}
-  {%- set compose_cmd, podman_compose = "docker-compose", false %}
-{%- else %}
-  {%- set compose_cmd, podman_compose = "podman-compose", true %}
-{%- endif %}
-{%- do mapdata.update({"_compose": compose_cmd, "_podman_compose": podman_compose}) %}
-
-{%- set enabled_containers = [mapdata.lookup.container.changedetection.container_name] %}
-{%- for misc in ["playwright", "selenium"] %}
-  {%- if mapdata[misc].enable %}
-    {%- do enabled_containers.append(mapdata.lookup.container[misc ~ "_chrome"].container_name) %}
+{%- set base_path = mapdata.lookup.paths.base %}
+{%- for path, val in mapdata.lookup.paths.items() %}
+  {%- if val is string and not val.startswith("/") %}
+    {%- do mapdata.lookup.paths.update({path: base_path | path_join(val)}) %}
   {%- endif %}
 {%- endfor %}
 
-{%- do mapdata.update({"_containers": enabled_containers}) %}
-
-{%- if mapdata._podman_compose and mapdata.installation.podman.rootless %}
-  {%- do mapdata.update({"_services": mapdata.lookup.user.home | path_join(".config", "systemd", "user")}) %}
-{%- else %}
-  {%- do mapdata.update({"_services": "/etc/systemd/system"}) %}
+{%- if not mapdata.lookup.user.home %}
+  {%- do mapdata.lookup.user.update({"home": base_path}) %}
 {%- endif %}
 
-{%- if mapdata._podman_compose %}
-  {%- if mapdata.installation.podman.compose_systemd %}
-    {%- set service_names = ["podman-compose@changedetection.service"] %}
-  {%- elif mapdata.installation.podman.compose_pods %}
-    {%- set service_names = ["pod_changedetection.service"] %}
-  {%- else %}
-    {%- set service_names = [] %}
-    {%- for cnt in enabled_containers %}
-      {%- do service_names.append(cnt ~ '.service') %}
-    {%- endfor %}
+{%- if mapdata.install.method != "compose-module" %}
+  {#- Without custom modules, the uid needs to be set beforehand -#}
+  {%- if not mapdata.lookup.user.uid %}
+    {%- do mapdata.lookup.user.update({"uid": 4373}) %}
   {%- endif %}
-  {%- do mapdata.update({"_service_names": service_names}) %}
+
+  {#-
+      This part tries to autoconfigure pod usage with podman-compose.
+      Not all versions allow selection, so that has to be accounted for.
+      Pods require "localhost" as hostname instead of service hostname.
+  -#}
+
+  {%- if "podman-compose" == mapdata.install.method -%}
+    {%- set pc_version = salt["cmd.run_stdout"]("podman-compose version --short", ignore_retcode=true)
+                         or mapdata.lookup.podman.compose_current_pip_default -%}
+    {%- set pod_enabled = {
+        "is": mapdata.install.podman.compose_pods,
+        "can": true,
+        "must": false
+      } -%}
+
+    {%- for v in mapdata.lookup.podman.compose_forced_pods -%}
+      {%- if pc_version.startswith(v) -%}
+        {%- do pod_enabled.update({"must": true}) -%}
+      {%- endif -%}
+    {%- endfor -%}
+
+    {%- for v in mapdata.lookup.podman.compose_nopods -%}
+      {%- if pc_version.startswith(v) -%}
+        {%- do pod_enabled.update({"can": false}) -%}
+      {%- endif -%}
+    {%- endfor -%}
+
+    {%- if pod_enabled.must and not pod_enabled.is -%}
+      {%- do salt.log.warning("Pod creation was disabled, but has to be enabled for current podman-compose version. Overriding.") -%}
+      {%- do mapdata.install.podman.update({"compose_pods": true}) -%}
+    {%- elif not pod_enabled.can and pod_enabled.is -%}
+      {%- do salt.log.warning("Pod creation was enabled, but cannot be enabled for current podman-compose version. Overriding.") -%}
+      {%- do mapdata.install.podman.update({"compose_pods": false}) -%}
+    {%- endif -%}
+    {#- This tells the formula whether it needs to include --no-pod for v >=1.0.4 -#}
+    {%- do mapdata.update({"_podman_nopod_switch": pod_enabled.can and not pod_enabled.is}) %}
+
+    {%- if mapdata.install.podman.compose_systemd %}
+      {%- for v in mapdata.lookup.podman.compose_no_systemd -%}
+        {%- if pc_version.startswith(v) -%}
+          {%- do salt.log.warning("podman-compose systemd integration was selected, but cannot be enabled for current podman-compose version. Overriding.") -%}
+          {%- do mapdata.install.podman.update({"compose_systemd": false}) -%}
+        {%- endif -%}
+      {%- endfor -%}
+    {%- endif %}
+  {%- endif -%}
+
+  {%- if "podman-compose" != mapdata.install.method or
+           not mapdata.install.podman.compose_pods -%}
+    {%- do mapdata.update({
+      "_playwright_chrome_host": mapdata.lookup.container.playwright_chrome.hostname,
+      "_selenium_chrome_host": mapdata.lookup.container.selenium_chrome.hostname,
+    }) -%}
+  {%- else -%}
+    {%- do mapdata.update({
+      "_playwright_chrome_host": "localhost",
+      "_selenium_chrome_host": "localhost",
+    }) -%}
+  {%- endif -%}
+
+
+  {#-
+      Convenience: Make paths relative to base if not absolute.
+  -#}
+  {%- for path in [
+                    "compose",
+                    "config_changedetection",
+                    "config_playwright_chrome",
+                    "config_selenium_chrome",
+                    "data"
+                  ] -%}
+    {%- if not mapdata.lookup.paths[path].startswith("/") -%}
+      {%- do mapdata.lookup.paths.update({path: mapdata.lookup.paths.base | path_join(mapdata.lookup.paths[path])}) -%}
+    {%- endif -%}
+  {%- endfor -%}
+  {%- if not mapdata.lookup.user.home %}
+    {%- do mapdata.lookup.user.update({"home": mapdata.lookup.paths.base}) %}
+  {%- elif not mapdata.lookup.user.home.startswith("/") %}
+    {%- do mapdata.lookup.user.update({"home": mapdata.lookup.paths.base | path_join(mapdata.lookup.user.home)}) %}
+  {%- endif %}
+
+
+  {#-
+      Convenience: Save compose vars. This avoids a lot of unreadable
+      Jinja in the service.running state file.
+  -#}
+  {%- if mapdata.install.method == "docker-compose" %}
+    {%- set compose_cmd, podman_compose = "docker-compose", false %}
+  {%- else %}
+    {%- set compose_cmd, podman_compose = "podman-compose", true %}
+  {%- endif %}
+  {%- do mapdata.update({"_compose": compose_cmd, "_podman_compose": podman_compose}) %}
+
+  {%- set enabled_containers = [mapdata.lookup.container.changedetection.container_name] %}
+  {%- for misc in ["playwright", "selenium"] %}
+    {%- if mapdata[misc].enable %}
+      {%- do enabled_containers.append(mapdata.lookup.container[misc ~ "_chrome"].container_name) %}
+    {%- endif %}
+  {%- endfor %}
+
+  {%- do mapdata.update({"_containers": enabled_containers}) %}
+
+  {%- if mapdata._podman_compose and mapdata.install.podman.rootless %}
+    {%- do mapdata.update({"_services": mapdata.lookup.user.home | path_join(".config", "systemd", "user")}) %}
+  {%- else %}
+    {%- do mapdata.update({"_services": "/etc/systemd/system"}) %}
+  {%- endif %}
+
+  {%- if mapdata._podman_compose %}
+    {%- if mapdata.install.podman.compose_systemd %}
+      {%- set service_names = ["podman-compose@changedetection.service"] %}
+    {%- elif mapdata.install.podman.compose_pods %}
+      {%- set service_names = ["pod_changedetection.service"] %}
+    {%- else %}
+      {%- set service_names = [] %}
+      {%- for cnt in enabled_containers %}
+        {%- do service_names.append(cnt ~ '.service') %}
+      {%- endfor %}
+    {%- endif %}
+    {%- do mapdata.update({"_service_names": service_names}) %}
+  {%- endif %}
 {%- endif %}

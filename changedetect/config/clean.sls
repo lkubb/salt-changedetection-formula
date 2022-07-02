@@ -8,9 +8,13 @@
 include:
   - {{ sls_service_clean }}
 
-# does not delete settings json file (and data) to prevent accidental data loss
-# something needs to be in here to require this file
-changedetect-config-clean-file-absent:
-  test.nop:
+# This does not lead to the containers/services being rebuilt
+# and thus differs from the usual behavior
+Changedetection environment files are absent:
+  file.absent:
+    - names:
+      - {{ changedetect.lookup.paths.config_changedetection }}
+      - {{ changedetect.lookup.paths.config_playwright_chrome }}
+      - {{ changedetect.lookup.paths.config_selenium_chrome }}
     - require:
       - sls: {{ sls_service_clean }}

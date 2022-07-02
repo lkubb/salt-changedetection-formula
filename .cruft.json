@@ -1,6 +1,6 @@
 {
-  "template": "https://github.com/lkubb/salt-template-formula",
-  "commit": "50a694adefdf54f1ca465db433c033ca764942bc",
+  "template": "https://github.com/lkubb/salt-template-formula-compose",
+  "commit": "7c15b4ed8e4a1a140324cff2bb17b0fa743494bc",
   "checkout": null,
   "context": {
     "cookiecutter": {
@@ -18,43 +18,30 @@
       "name": "Changedetection",
       "abbr": "changedetect",
       "abbr_pysafe": "changedetect",
-      "pkg": "",
-      "needs_repo": "",
-      "config": "y",
-      "service": "changedetection",
-      "subcomponent": "",
-      "subcomponent_config": "",
+      "project_name": "changedetection",
+      "containers": "changedetection,playwright_chrome,selenium_chrome",
       "git_username": "lkubb",
       "_lookup": {
-        "pkg": {
-          "container": {
-            "changedetection": "ghcr.io/dgtlmoon/changedetection.io",
-            "playwright_chrome": "docker.io/browserless/chrome",
-            "selenium_chrome": "docker.io/selenium/standalone-chrome-debug:3.141.59"
-          }
-        },
         "container": {
           "changedetection": {
             "container_name": "changedetection",
             "hostname": "changedetection",
+            "image": "ghcr.io/dgtlmoon/changedetection.io",
             "puid": false,
             "pgid": false
           },
           "playwright_chrome": {
             "container_name": "playwright-chrome",
-            "hostname": "playwright-chrome"
+            "hostname": "playwright-chrome",
+            "image": "docker.io/browserless/chrome"
           },
           "selenium_chrome": {
             "container_name": "selenium-chrome",
-            "hostname": "browser-chrome"
+            "hostname": "browser-chrome",
+            "image": "docker.io/selenium/standalone-chrome-debug:3.141.59"
           }
         },
         "paths": {
-          "base": "/opt/changedetection",
-          "compose": "docker-compose.yml",
-          "config_changedetection": "changedetection.env",
-          "config_playwright_chrome": "playwright-chrome.env",
-          "config_selenium_chrome": "selenium-chrome.env",
           "data": "datastore"
         },
         "podman": {
@@ -71,17 +58,10 @@
             "1.0.2",
             "1.0.3"
           ]
-        },
-        "user": {
-          "name": "changedetection",
-          "home": "",
-          "groups": [],
-          "shell": "/usr/sbin/nologin",
-          "uid": 4373
         }
       },
       "_settings": {
-        "installation": {
+        "install": {
           "method": "docker-compose",
           "podman": {
             "compose_systemd": false,
@@ -155,7 +135,7 @@
           }
         }
       },
-      "_template": "https://github.com/lkubb/salt-template-formula"
+      "_template": "https://github.com/lkubb/salt-template-formula-compose"
     }
   },
   "directory": null

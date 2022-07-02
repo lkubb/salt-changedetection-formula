@@ -8,59 +8,45 @@
 include:
   - {{ sls_config_clean }}
 
-{%- if changedetect._podman_compose and not changedetect.installation.podman.compose_systemd %}
-
-Changedetection systemd units are absent:
-  file.absent:
-    - names:
-{%-   for cnt in changedetect._containers %}
-      - {{ changedetect._services | path_join(cnt ~ ".service") }}
-{%-   endfor %}
-{%-   if changedetect.installation.podman.compose_pods %}
-      - {{ changedetect._services | path_join("pod_changedetection.service") }}
+Changedetection is absent:
+  compose.removed:
+    - name: {{ changedetect.lookup.paths.compose }}
+    - volumes: {{ changedetect.install.remove_all_data_for_sure }}
+{%- for param in ["project_name", "container_prefix", "pod_prefix", "separator"] %}
+{%-   if changedetect.lookup.compose.get(param) is not none %}
+    - {{ param }}: {{ changedetect.lookup.compose[param] }}
 {%-   endif %}
+{%- endfor %}
+{%- if changedetect.install.rootless %}
+    - user: {{ changedetect.lookup.user.name }}
 {%- endif %}
-
-# for podman with systemd services, this is unnecessary
-Changedetection containers are absent:
-  cmd.run:
-    - name: |
-        {{ changedetect._compose }} -f '{{ changedetect.lookup.paths.compose }}' \
-          --project-name changedetection \
-{%- if changedetect._podman_compose %}
-{%-   if changedetect._podman_nopod_switch %}
-          --no-pod \
-{%-   elif changedetect.installation.podman.compose_pods and not changedetect.installation.podman.compose_systemd %}
-          --pod-args='--infra=true --share=""' \
-{%-   endif %}
-{%- endif %}
-        down
-{%- if changedetect._podman_compose and changedetect.installation.podman.rootless %}
-    - runas: {{ changedetect.lookup.user.name }}
-{%- endif %}
-    - onlyif:
-      - fun: file.file_exists
-        path: {{ changedetect.lookup.paths.compose }}
     - require:
       - sls: {{ sls_config_clean }}
 
-Changedetection container definitions are absent:
+Changedetection compose file is absent:
   file.absent:
-    - names:
-      - {{ changedetect.lookup.paths.compose }}
-      - {{ changedetect.lookup.paths.config_changedetection }}
-      - {{ changedetect.lookup.paths.config_selenium_chrome }}
-      - {{ changedetect.lookup.paths.config_playwright_chrome }}
+    - name: {{ changedetect.lookup.paths.compose }}
     - require:
-      - Changedetection containers are absent
+      - Changedetection is absent
 
-Changedetection user has lingering disabled:
-  cmd.run:
-    - name: loginctl disable-linger '{{ changedetect.lookup.user.name }}'
-    # avoid errors when the user does not exist
-    - onlyif:
-      - loginctl show-user '{{ changedetect.lookup.user.name }}' --property=Linger | grep -q yes
+Changedetection user session is not initialized at boot:
+  compose.lingering_managed:
+    - name: {{ changedetect.lookup.user.name }}
+    - enable: false
 
 Changedetection user account is absent:
   user.absent:
     - name: {{ changedetect.lookup.user.name }}
+    - purge: {{ changedetect.install.remove_all_data_for_sure }}
+    - require:
+      - Changedetection is absent
+
+{%- if changedetect.install.remove_all_data_for_sure %}
+
+Changedetection paths are absent:
+  file.directory:
+    - names:
+      - {{ changedetect.lookup.paths.base }}
+    - require:
+      - Changedetection is absent
+{%- endif %}

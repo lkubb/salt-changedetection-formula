@@ -1,11 +1,11 @@
 version: '2'
 services:
   changedetection:
-    image: {{ changedetect.lookup.pkg.container.changedetection }}
+    image: {{ changedetect.lookup.container.changedetection.image }}
     container_name: {{ changedetect.lookup.container.changedetection.container_name }}
     hostname: {{ changedetect.lookup.container.changedetection.hostname }}
     volumes:
-      - {{ changedetect.lookup.paths.data }}:/datastore
+      - {{ changedetect.lookup.paths.data or "changedetection-data" }}:/datastore
     env_file:
       - {{ changedetect.lookup.paths.config_changedetection }}
       # Comment out ports: when using behind a reverse proxy , enable networks: etc.
@@ -22,7 +22,7 @@ services:
   browser-chrome:
     hostname: {{ changedetect.lookup.container.selenium_chrome.hostname }}
     container_name: {{ changedetect.lookup.container.selenium_chrome.container_name }}
-    image: {{ changedetect.lookup.pkg.container.selenium_chrome }}
+    image: {{ changedetect.lookup.container.selenium_chrome.image }}
     env_file:
       - {{ changedetect.lookup.paths.config_selenium_chrome }}
     shm_size: 2g
@@ -40,8 +40,14 @@ services:
   playwright-chrome:
     hostname: {{ changedetect.lookup.container.playwright_chrome.hostname }}
     container_name: {{ changedetect.lookup.container.playwright_chrome.container_name }}
-    image: {{ changedetect.lookup.pkg.container.playwright_chrome }}
+    image: {{ changedetect.lookup.container.playwright_chrome.image }}
     restart: unless-stopped
     env_file:
       - {{ changedetect.lookup.paths.config_playwright_chrome }}
+{%- endif %}
+
+{%- if not changedetect.lookup.paths.data %}
+
+volumes:
+  changedetection-data:
 {%- endif %}

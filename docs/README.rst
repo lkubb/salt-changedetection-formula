@@ -14,7 +14,7 @@ Changedetection Formula
    :scale: 100%
    :target: https://github.com/pre-commit/pre-commit
 
-Manage Changedetection with Salt.
+Manage Changedetection with Salt and Podman.
 
 .. contents:: **Table of Contents**
    :depth: 1
@@ -41,7 +41,7 @@ If you need (non-default) configuration, please refer to:
 
 Special notes
 -------------
-
+* This formula is re-written with the custom `compose modules <https://github.com/lkubb/salt-podman-formula>`_ in mind. It was actually the cause for writing the modules, as evidenced by the ``standalone`` states. You can enable using the module by setting ``install:method`` to ``compose-module``.
 
 Configuration
 -------------
@@ -58,25 +58,25 @@ Available states
 
 *Meta-state (This is a state that includes other states)*.
 
-This installs the changedetect package,
-manages the changedetect configuration file and then
-starts the associated changedetect service.
+This installs the changedetect composition,
+manages the changedetect configuration and then
+starts the associated service.
 
 ``changedetect.package``
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-This state will install the changedetect package only.
+This state will install the changedetect composition only.
 
 ``changedetect.config``
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-This state will configure the changedetect service and has a dependency on ``changedetect.install``
+This state will configure the changedetect containers and has a dependency on ``changedetect.install``
 via include list.
 
 ``changedetect.service``
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-This state will start the changedetect service and has a dependency on ``changedetect.config``
+This state will start the changedetect container services and has a dependency on ``changedetect.config``
 via include list.
 
 ``changedetect.clean``
@@ -85,9 +85,9 @@ via include list.
 *Meta-state (This is a state that includes other states)*.
 
 This state will undo everything performed in the ``changedetect`` meta-state in reverse order, i.e.
-stops the service,
-removes the configuration file and
-then uninstalls the package.
+stops the services,
+removes the configurations and
+then uninstalls the composition.
 
 ``changedetect.service.clean``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -97,13 +97,13 @@ This state will stop the changedetect service and disable it at boot time.
 ``changedetect.config.clean``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-This state will remove the configuration of the changedetect service and has a
+This state will remove the configuration of the changedetect composition and has a
 dependency on ``changedetect.service.clean`` via include list.
 
 ``changedetect.package.clean``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-This state will remove the changedetect package and has a depency on
+This state will remove the changedetect composition and has a depency on
 ``changedetect.config.clean`` via include list.
 
 Contributing to this repo
