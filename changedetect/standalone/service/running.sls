@@ -72,11 +72,14 @@ Changedetection containers are restarted:
 {%- else %}
 
 Changedetection containers are running:
-  cmd.run:
+  cmd.watch:
     - name: |
         {{ changedetect._compose }} -f '{{ changedetect.lookup.paths.compose }}' \
           --project-name changedetection \
         start
+    - watch:
+      - Changedetection containers are present
+      - file: {{ changedetect.lookup.paths.data | path_join("url-watches.json") }}
 
 Changedetection container has correct settings applied:
   cmd.run:

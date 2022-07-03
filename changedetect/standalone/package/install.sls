@@ -34,7 +34,6 @@ Changedetection paths are present:
   file.directory:
     - names:
       - {{ changedetect.lookup.paths.base }}
-      - {{ changedetect.lookup.paths.data }}
 {%- if      changedetect._podman_compose
     and not changedetect.install.podman.compose_systemd
     and     changedetect.install.podman.rootless %}

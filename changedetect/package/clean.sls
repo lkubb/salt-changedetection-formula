@@ -44,7 +44,7 @@ Changedetection user account is absent:
 {%- if changedetect.install.remove_all_data_for_sure %}
 
 Changedetection paths are absent:
-  file.directory:
+  file.absent:
     - names:
       - {{ changedetect.lookup.paths.base }}
     - require:
