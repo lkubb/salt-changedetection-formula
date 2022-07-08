@@ -81,6 +81,9 @@ values:
       notification_mail_button_prefix: 0
       port: 5000
       salted_pass: ''
+      settings_headers_useragent: null
+      settings_requests_timeout: null
+      settings_requests_workers: null
       use_x_settings: false
     headers: {}
     requests: {}

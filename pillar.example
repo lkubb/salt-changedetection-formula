@@ -31,6 +31,13 @@ changedetect:
       notification_mail_button_prefix: 0
       port: 5000
       salted_pass: ''
+        # Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36
+        #   (KHTML, like Gecko) Chrome/87.0.4280.66 Safari/537.36
+      settings_headers_useragent: null
+        # 45
+      settings_requests_timeout: null
+        # 10
+      settings_requests_workers: null
       use_x_settings: false
     headers: {}
     requests: {}
