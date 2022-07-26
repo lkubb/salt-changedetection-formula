@@ -33,6 +33,9 @@ Changedetection user session is not initialized at boot:
   compose.lingering_managed:
     - name: {{ changedetect.lookup.user.name }}
     - enable: false
+    - onlyif:
+      - fun: user.info
+        name: {{ changedetect.lookup.user.name }}
 
 Changedetection user account is absent:
   user.absent:
@@ -40,6 +43,9 @@ Changedetection user account is absent:
     - purge: {{ changedetect.install.remove_all_data_for_sure }}
     - require:
       - Changedetection is absent
+    - retry:
+        attempts: 5
+        interval: 2
 
 {%- if changedetect.install.remove_all_data_for_sure %}
 

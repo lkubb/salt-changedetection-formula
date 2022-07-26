@@ -22,6 +22,8 @@ Changedetection user session is initialized at boot:
   compose.lingering_managed:
     - name: {{ changedetect.lookup.user.name }}
     - enable: {{ changedetect.install.rootless }}
+    - require:
+      - user: {{ changedetect.lookup.user.name }}
 
 Changedetection paths are present:
   file.directory:

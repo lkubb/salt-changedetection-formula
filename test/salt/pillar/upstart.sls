@@ -17,6 +17,7 @@ changedetect:
         ephemeral: true
         pod_prefix: null
         restart_policy: on-failure
+        restart_sec: 2
         separator: null
         stop_timeout: null
     paths:
@@ -32,6 +33,7 @@ changedetect:
       name: changedetection
       shell: /usr/sbin/nologin
       uid: null
+      gid: null
     container:
       changedetection:
         container_name: changedetection
