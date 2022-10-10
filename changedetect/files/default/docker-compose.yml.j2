@@ -11,6 +11,10 @@ services:
       # Comment out ports: when using behind a reverse proxy , enable networks: etc.
     ports:
       - {{ changedetect.config.env.port }}:{{ changedetect.config.env.port }}
+{%- if changedetect.install.autoupdate %}
+    labels:
+      - io.containers.autoupdate=registry
+{%- endif %}
     restart: unless-stopped
 
 {%- if changedetect.selenium.enable %}
@@ -30,6 +34,10 @@ services:
        #     # Workaround to avoid the browser crashing inside a docker container
        #     # See https://github.com/SeleniumHQ/docker-selenium#quick-start
        #     - /dev/shm:/dev/shm
+{%-   if changedetect.install.autoupdate %}
+    labels:
+      - io.containers.autoupdate=registry
+{%-   endif %}
     restart: unless-stopped
 {%- endif %}
 
@@ -44,6 +52,10 @@ services:
     restart: unless-stopped
     env_file:
       - {{ changedetect.lookup.paths.config_playwright_chrome }}
+{%-   if changedetect.install.autoupdate %}
+    labels:
+      - io.containers.autoupdate=registry
+{%-   endif %}
 {%- endif %}
 
 {%- if not changedetect.lookup.paths.data %}

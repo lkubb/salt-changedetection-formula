@@ -8,6 +8,18 @@
 include:
   - {{ sls_config_clean }}
 
+{%- if changedetect.install.autoupdate_service %}
+
+Podman autoupdate service is disabled for Changedetection:
+{%-   if changedetect.install.rootless %}
+  compose.systemd_service_disabled:
+    - user: {{ changedetect.lookup.user.name }}
+{%-   else %}
+  service.disabled:
+{%-   endif %}
+    - name: podman-auto-update.timer
+{%- endif %}
+
 Changedetection is absent:
   compose.removed:
     - name: {{ changedetect.lookup.paths.compose }}

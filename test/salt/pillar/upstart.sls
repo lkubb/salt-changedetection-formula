@@ -65,6 +65,8 @@ changedetect:
         - 1.0.3
   install:
     rootless: true
+    autoupdate: true
+    autoupdate_service: false
     remove_all_data_for_sure: false
     method: docker-compose
     podman:

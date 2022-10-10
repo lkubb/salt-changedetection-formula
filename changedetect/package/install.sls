@@ -71,3 +71,15 @@ Changedetection is installed:
     - require:
       - user: {{ changedetect.lookup.user.name }}
 {%- endif %}
+
+{%- if changedetect.install.autoupdate_service is not none %}
+
+Podman autoupdate service is managed for Changedetection:
+{%-   if changedetect.install.rootless %}
+  compose.systemd_service_{{ "enabled" if changedetect.install.autoupdate_service else "disabled" }}:
+    - user: {{ changedetect.lookup.user.name }}
+{%-   else %}
+  service.{{ "enabled" if changedetect.install.autoupdate_service else "disabled" }}:
+{%-   endif %}
+    - name: podman-auto-update.timer
+{%- endif %}
