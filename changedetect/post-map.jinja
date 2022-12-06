@@ -69,44 +69,10 @@
     {%- endif %}
   {%- endif -%}
 
-  {%- if "podman-compose" != mapdata.install.method or
-           not mapdata.install.podman.compose_pods -%}
-    {%- do mapdata.update({
-      "_playwright_chrome_host": mapdata.lookup.container.playwright_chrome.hostname,
-      "_selenium_chrome_host": mapdata.lookup.container.selenium_chrome.hostname,
-    }) -%}
-  {%- else -%}
-    {%- do mapdata.update({
-      "_playwright_chrome_host": "localhost",
-      "_selenium_chrome_host": "localhost",
-    }) -%}
-  {%- endif -%}
-
-
-  {#-
-      Convenience: Make paths relative to base if not absolute.
-  -#}
-  {%- for path in [
-                    "compose",
-                    "config_changedetection",
-                    "config_playwright_chrome",
-                    "config_selenium_chrome",
-                    "data"
-                  ] -%}
-    {%- if not mapdata.lookup.paths[path].startswith("/") -%}
-      {%- do mapdata.lookup.paths.update({path: mapdata.lookup.paths.base | path_join(mapdata.lookup.paths[path])}) -%}
-    {%- endif -%}
-  {%- endfor -%}
-  {%- if not mapdata.lookup.user.home %}
-    {%- do mapdata.lookup.user.update({"home": mapdata.lookup.paths.base}) %}
-  {%- elif not mapdata.lookup.user.home.startswith("/") %}
-    {%- do mapdata.lookup.user.update({"home": mapdata.lookup.paths.base | path_join(mapdata.lookup.user.home)}) %}
-  {%- endif %}
-
 
   {#-
       Convenience: Save compose vars. This avoids a lot of unreadable
-      Jinja in the service.running state file.
+      Jinja in the standalone.service.running state file.
   -#}
   {%- if mapdata.install.method == "docker-compose" %}
     {%- set compose_cmd, podman_compose = "docker-compose", false %}
@@ -143,4 +109,39 @@
     {%- endif %}
     {%- do mapdata.update({"_service_names": service_names}) %}
   {%- endif %}
+{%- endif %}
+
+
+{%- if "podman-compose" != mapdata.install.method or
+         not mapdata.install.podman.compose_pods -%}
+  {%- do mapdata.update({
+    "_playwright_chrome_host": mapdata.lookup.container.playwright_chrome.hostname,
+    "_selenium_chrome_host": mapdata.lookup.container.selenium_chrome.hostname,
+  }) -%}
+{%- else -%}
+  {%- do mapdata.update({
+    "_playwright_chrome_host": "localhost",
+    "_selenium_chrome_host": "localhost",
+  }) -%}
+{%- endif -%}
+
+
+{#-
+    Convenience: Make paths relative to base if not absolute.
+-#}
+{%- for path in [
+                  "compose",
+                  "config_changedetection",
+                  "config_playwright_chrome",
+                  "config_selenium_chrome",
+                  "data"
+                ] -%}
+  {%- if not mapdata.lookup.paths[path].startswith("/") -%}
+    {%- do mapdata.lookup.paths.update({path: mapdata.lookup.paths.base | path_join(mapdata.lookup.paths[path])}) -%}
+  {%- endif -%}
+{%- endfor -%}
+{%- if not mapdata.lookup.user.home %}
+  {%- do mapdata.lookup.user.update({"home": mapdata.lookup.paths.base}) %}
+{%- elif not mapdata.lookup.user.home.startswith("/") %}
+  {%- do mapdata.lookup.user.update({"home": mapdata.lookup.paths.base | path_join(mapdata.lookup.user.home)}) %}
 {%- endif %}
