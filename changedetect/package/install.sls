@@ -1,7 +1,6 @@
-# -*- coding: utf-8 -*-
 # vim: ft=sls
 
-{%- set tplroot = tpldir.split('/')[0] %}
+{%- set tplroot = tpldir.split("/")[0] %}
 {%- from tplroot ~ "/map.jinja" import mapdata as changedetect with context %}
 {%- from tplroot ~ "/libtofs.jinja" import files_switch with context %}
 
@@ -35,11 +34,28 @@ Changedetection paths are present:
     - require:
       - user: {{ changedetect.lookup.user.name }}
 
+{%- if changedetect.install.podman_api %}
+
+Changedetection podman API is enabled:
+  compose.systemd_service_enabled:
+    - name: podman
+    - user: {{ changedetect.lookup.user.name }}
+    - require:
+      - Changedetection user session is initialized at boot
+
+Changedetection podman API is available:
+  compose.systemd_service_running:
+    - name: podman
+    - user: {{ changedetect.lookup.user.name }}
+    - require:
+      - Changedetection user session is initialized at boot
+{%- endif %}
+
 Changedetection compose file is managed:
   file.managed:
     - name: {{ changedetect.lookup.paths.compose }}
-    - source: {{ files_switch(['docker-compose.yml', 'docker-compose.yml.j2'],
-                              lookup='Changedetection compose file is present'
+    - source: {{ files_switch(["docker-compose.yml", "docker-compose.yml.j2"],
+                              lookup="Changedetection compose file is present"
                  )
               }}
     - mode: '0644'

@@ -1,8 +1,14 @@
-# -*- coding: utf-8 -*-
 # vim: ft=sls
 
-{%- set tplroot = tpldir.split('/')[0] %}
-{%- set sls_config_clean = tplroot ~ '.config.clean' %}
+{#-
+    Removes the changedetection, playwright_chrome, selenium_chrome containers
+    and the corresponding user account and service units.
+    Has a depency on `changedetect.config.clean`_.
+    If ``remove_all_data_for_sure`` was set, also removes all data.
+#}
+
+{%- set tplroot = tpldir.split("/")[0] %}
+{%- set sls_config_clean = tplroot ~ ".config.clean" %}
 {%- from tplroot ~ "/map.jinja" import mapdata as changedetect with context %}
 
 include:
@@ -40,6 +46,25 @@ Changedetection compose file is absent:
     - name: {{ changedetect.lookup.paths.compose }}
     - require:
       - Changedetection is absent
+
+{%- if changedetect.install.podman_api %}
+
+Changedetection podman API is unavailable:
+  compose.systemd_service_dead:
+    - name: podman
+    - user: {{ changedetect.lookup.user.name }}
+    - onlyif:
+      - fun: user.info
+        name: {{ changedetect.lookup.user.name }}
+
+Changedetection podman API is disabled:
+  compose.systemd_service_disabled:
+    - name: podman
+    - user: {{ changedetect.lookup.user.name }}
+    - onlyif:
+      - fun: user.info
+        name: {{ changedetect.lookup.user.name }}
+{%- endif %}
 
 Changedetection user session is not initialized at boot:
   compose.lingering_managed:

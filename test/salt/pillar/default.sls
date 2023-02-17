@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # vim: ft=yaml
 ---
 changedetect:
@@ -68,6 +67,7 @@ changedetect:
     autoupdate: true
     autoupdate_service: false
     remove_all_data_for_sure: false
+    podman_api: true
     method: docker-compose
     podman:
       compose_pods: true
