@@ -51,7 +51,7 @@ Changedetection compose file is absent:
 
 Changedetection podman API is unavailable:
   compose.systemd_service_dead:
-    - name: podman
+    - name: podman.socket
     - user: {{ changedetect.lookup.user.name }}
     - onlyif:
       - fun: user.info
@@ -59,7 +59,7 @@ Changedetection podman API is unavailable:
 
 Changedetection podman API is disabled:
   compose.systemd_service_disabled:
-    - name: podman
+    - name: podman.socket
     - user: {{ changedetect.lookup.user.name }}
     - onlyif:
       - fun: user.info

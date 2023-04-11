@@ -1,6 +1,6 @@
 {
   "template": "https://github.com/lkubb/salt-template-formula-compose",
-  "commit": "97cd1b30d1525efd53961d1b7f365dbccb69d37e",
+  "commit": "d261bbd33723b1b8df5d67d58918868e3d70d76b",
   "checkout": null,
   "context": {
     "cookiecutter": {
@@ -21,7 +21,7 @@
       "project_name": "changedetection",
       "containers": "changedetection,playwright_chrome,selenium_chrome",
       "git_username": "lkubb",
-      "_lookup": {
+      "lookup": {
         "container": {
           "changedetection": {
             "container_name": "changedetection",
@@ -60,7 +60,7 @@
           ]
         }
       },
-      "_settings": {
+      "settings": {
         "install": {
           "method": "docker-compose",
           "podman": {

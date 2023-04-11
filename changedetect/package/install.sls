@@ -38,14 +38,14 @@ Changedetection paths are present:
 
 Changedetection podman API is enabled:
   compose.systemd_service_enabled:
-    - name: podman
+    - name: podman.socket
     - user: {{ changedetect.lookup.user.name }}
     - require:
       - Changedetection user session is initialized at boot
 
 Changedetection podman API is available:
   compose.systemd_service_running:
-    - name: podman
+    - name: podman.socket
     - user: {{ changedetect.lookup.user.name }}
     - require:
       - Changedetection user session is initialized at boot
