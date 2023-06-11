@@ -2,7 +2,7 @@
 
 {%- set tplroot = tpldir.split("/")[0] %}
 {%- from tplroot ~ "/map.jinja" import mapdata as changedetect with context %}
-{%- from tplroot ~ "/libtofs.jinja" import files_switch with context %}
+{%- from tplroot ~ "/libtofsstack.jinja" import files_switch with context %}
 
 Changedetection user account is present:
   user.present:
@@ -54,14 +54,16 @@ Changedetection podman API is available:
 Changedetection compose file is managed:
   file.managed:
     - name: {{ changedetect.lookup.paths.compose }}
-    - source: {{ files_switch(["docker-compose.yml", "docker-compose.yml.j2"],
-                              lookup="Changedetection compose file is present"
+    - source: {{ files_switch(
+                    ["docker-compose.yml", "docker-compose.yml.j2"],
+                    config=changedetect,
+                    lookup="Changedetection compose file is present",
                  )
               }}
     - mode: '0644'
     - user: root
     - group: {{ changedetect.lookup.rootgroup }}
-    - makedirs: True
+    - makedirs: true
     - template: jinja
     - makedirs: true
     - context:

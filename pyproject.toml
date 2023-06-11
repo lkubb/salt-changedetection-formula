@@ -17,6 +17,7 @@ sphinx-rtd-theme = "^1.0.0"
 
 [tool.slsdoc]
 include_empty = true
+sort_list = ["init", "clean", "package", "config", "service"]
 
 [tool.slsdoc.single_renderer]
 header = "Available states"

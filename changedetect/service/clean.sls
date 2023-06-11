@@ -1,6 +1,5 @@
 # vim: ft=sls
 
-
 {#-
     Stops the changedetection, playwright_chrome, selenium_chrome container services
     and disables them at boot time.
