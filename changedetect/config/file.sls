@@ -24,7 +24,7 @@ changedetection environment file is managed:
     - template: jinja
     - require:
       - user: {{ changedetect.lookup.user.name }}
-    - watch_in:
+    - require_in:
       - Changedetection is installed
     - context:
         changedetect: {{ changedetect | json }}
@@ -46,7 +46,7 @@ selenium_chrome environment file is managed:
     - template: jinja
     - require:
       - user: {{ changedetect.lookup.user.name }}
-    - watch_in:
+    - require_in:
       - Changedetection is installed
     - context:
         changedetect: {{ changedetect | json }}
@@ -69,7 +69,7 @@ playwright_chrome environment file is managed:
     - template: jinja
     - require:
       - user: {{ changedetect.lookup.user.name }}
-    - watch_in:
+    - require_in:
       - Changedetection is installed
     - context:
         changedetect: {{ changedetect | json }}

@@ -34,3 +34,4 @@ Changedetection service is running:
 {%- endif %}
     - watch:
       - Changedetection is installed
+      - sls: {{ sls_config_file }}
