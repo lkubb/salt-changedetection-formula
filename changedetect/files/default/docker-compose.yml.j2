@@ -5,7 +5,7 @@ services:
     container_name: {{ changedetect.lookup.container.changedetection.container_name }}
     hostname: {{ changedetect.lookup.container.changedetection.hostname }}
     volumes:
-      - {{ changedetect.lookup.paths.data or "changedetection-data" }}:/datastore
+      - {{ changedetect.lookup.paths.data or "changedetection-data" }}:/datastore:Z
     env_file:
       - {{ changedetect.lookup.paths.config_changedetection }}
       # Comment out ports: when using behind a reverse proxy , enable networks: etc.
